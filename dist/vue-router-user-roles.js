@@ -49,17 +49,28 @@ RouteProtect.prototype.hasAccess = function hasAccess (ref) {
 RouteProtect.prototype._hasAccessToRoute = function _hasAccessToRoute (route) {
     var this$1 = this;
 
+  var accessdefault = { access: true };
   if (this.vm.user && route.meta.permissions) {
-    var matched = route.meta.permissions.find(function (item) { return item.role === this$1.vm.user.role; });
-    if (matched) {
-      if ((typeof matched.access === "boolean" && !matched.access) ||
-          (typeof matched.access === "function" && !matched.access(this.vm.user, route))) {
-        return { access: false, redirect: matched.redirect };
+    var matched = [];
+    for(var i in route.meta.permissions) {
+      var item = route.meta.permissions[i];
+      if (Array.isArray(this$1.vm.user.role) && this$1.vm.user.role.indexOf(item.role) > -1) {
+        matched.push(item);
+      } else if (typeof this$1.vm.user.role === 'string' && item.role === this$1.vm.user.role) {
+        matched.push(item);
+      }
+    }
+    for (var m in matched) {
+      var rule = matched[m];
+      if (typeof rule.access === "boolean" && rule.access) {
+          return { access: true };
+      } else if ((typeof rule.access === "boolean" && !rule.access) ||
+          (typeof rule.access === "function" && !rule.access(this$1.vm.user, route))) {
+        accessdefault = { access: false, redirect: rule.redirect };
       }
     }
   }
-
-  return { access: true };
+  return accessdefault;
 };
 RouteProtect.prototype.resolve = function resolve (to, from, next) {
   this.to = to;
@@ -68,7 +79,7 @@ RouteProtect.prototype.resolve = function resolve (to, from, next) {
     var access = ref.access;
     var redirect = ref.redirect;
   access ? next() : next({ name: redirect });
-  };
+};
 
 function plugin (Vue$$1, opts) {
   if (!opts.router) {

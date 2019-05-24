@@ -33,17 +33,28 @@ export class RouteProtect {
     return this._hasAccessToRoute(route).access;
   }
   _hasAccessToRoute (route) {
+    let accessdefault = { access: true };
     if (this.vm.user && route.meta.permissions) {
-      const matched = route.meta.permissions.find(item => item.role === this.vm.user.role);
-      if (matched) {
-        if ((typeof matched.access === "boolean" && !matched.access) ||
-            (typeof matched.access === "function" && !matched.access(this.vm.user, route))) {
-          return { access: false, redirect: matched.redirect };
+      let matched = [];
+      for(let i in route.meta.permissions) {
+        let item = route.meta.permissions[i];
+        if (Array.isArray(this.vm.user.role) && this.vm.user.role.indexOf(item.role) > -1) {
+          matched.push(item);
+        } else if (typeof this.vm.user.role === 'string' && item.role === this.vm.user.role) {
+          matched.push(item);
+        }
+      }
+      for (let m in matched) {
+        let rule = matched[m];
+        if (typeof rule.access === "boolean" && rule.access) {
+          return { access: true };
+        } else if ((typeof rule.access === "boolean" && !rule.access) ||
+            (typeof rule.access === "function" && !rule.access(this.vm.user, route))) {
+          accessdefault = { access: false, redirect: rule.redirect };
         }
       }
     }
-
-    return { access: true };
+    return accessdefault;
   }
   resolve (to, from, next) {
     this.to = to;
