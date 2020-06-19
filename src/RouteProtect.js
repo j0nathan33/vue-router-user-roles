@@ -33,8 +33,9 @@ export class RouteProtect {
     return this._hasAccessToRoute(route).access;
   }
   _hasAccessToRoute (route) {
-    let accessdefault = { access: false, redirect: "error_403"};
+    let accessdefault = undefined
     if (this.vm.user && route.meta.permissions) {
+      accessdefault = { access: false, redirect: "error_403"};
       let matched = [];
       for(let i in route.meta.permissions) {
         let item = route.meta.permissions[i];
@@ -53,6 +54,8 @@ export class RouteProtect {
           accessdefault = { access: false, redirect: rule.redirect };
         }
       }
+    } else if (route.meta.permissions === undefined) {
+      accessdefault = { access: true};
     }
     return accessdefault;
   }

@@ -1,5 +1,5 @@
 /*!
- * vue-router-user-roles v0.1.95 
+ * vue-router-user-roles v0.1.96 
  * (c) 2020 Anthony Gore
  * Released under the MIT License.
  */
@@ -47,8 +47,9 @@ RouteProtect.prototype.hasAccess = function hasAccess (ref) {
 RouteProtect.prototype._hasAccessToRoute = function _hasAccessToRoute (route) {
     var this$1 = this;
 
-  var accessdefault = { access: false, redirect: "error_403"};
+  var accessdefault = undefined;
   if (this.vm.user && route.meta.permissions) {
+    accessdefault = { access: false, redirect: "error_403"};
     var matched = [];
     for(var i in route.meta.permissions) {
       var item = route.meta.permissions[i];
@@ -61,12 +62,14 @@ RouteProtect.prototype._hasAccessToRoute = function _hasAccessToRoute (route) {
     for (var m in matched) {
       var rule = matched[m];
       if (typeof rule.access === "boolean" && rule.access) {
-          return { access: true };
+        return { access: true };
       } else if ((typeof rule.access === "boolean" && !rule.access) ||
           (typeof rule.access === "function" && !rule.access(this$1.vm.user, route))) {
         accessdefault = { access: false, redirect: rule.redirect };
       }
     }
+  } else if (route.meta.permissions === undefined) {
+    accessdefault = { access: true};
   }
   return accessdefault;
 };
@@ -88,7 +91,7 @@ function plugin (Vue$$1, opts) {
   opts.router.beforeEach(function (to, from, next) { return rp.resolve(to, from, next); });
 }
 
-plugin.version = "0.1.95";
+plugin.version = "0.1.96";
 
 if (typeof window !== "undefined" && window.Vue) {
   window.Vue.use(plugin);
