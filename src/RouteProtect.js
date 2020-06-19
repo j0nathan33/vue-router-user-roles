@@ -33,7 +33,7 @@ export class RouteProtect {
     return this._hasAccessToRoute(route).access;
   }
   _hasAccessToRoute (route) {
-    let accessdefault = { access: true };
+    let accessdefault = { access: false };
     if (this.vm.user && route.meta.permissions) {
       let matched = [];
       for(let i in route.meta.permissions) {
